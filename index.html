@@ -1,10 +1,9 @@
- <!DOCTYPE html>
-
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Savoria Bistro - App Pelayanan & Admin</title>
+  <title>Savoria Bistro - App Pelayanan & Admin Pro</title>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -43,7 +42,7 @@
           <i class="fa-solid fa-utensils text-2xl text-amber-400"></i>
         </div>
         <h2 class="text-2xl font-extrabold text-white">Savoria Bistro</h2>
-        <p class="text-xs text-slate-400 mt-1">Sistem Pelayanan Restoran Digital</p>
+        <p class="text-xs text-slate-400 mt-1">Sistem Pelayanan Restoran Digital Pro</p>
       </div>
 
       <form onsubmit="handleLogin(event)" class="space-y-4">
@@ -78,7 +77,7 @@
             <i class="fa-solid fa-user mr-1"></i> Pelanggan
           </button>
           <button onclick="quickLogin('admin')" class="bg-slate-700 hover:bg-slate-600 text-amber-400 text-xs py-2 px-2 rounded-xl font-bold transition-colors border border-slate-600">
-            <i class="fa-solid fa-user-shield mr-1"></i> Admin
+            <i class="fa-solid fa-user-shield mr-1"></i> Admin / Kasir
           </button>
         </div>
       </div>
@@ -90,10 +89,10 @@
     <div class="max-w-md mx-auto flex items-center justify-between">
       <div>
         <div class="flex items-center gap-2">
-          <span id="roleBadge" class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
-            <!-- Dynamic Role -->
-          </span>
-          <span id="tableName" class="text-xs text-slate-400 font-semibold">Meja #08</span>
+          <span id="roleBadge" class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30"></span>
+          <button onclick="changeTableNumber()" id="tableBtn" class="text-xs text-amber-400 font-semibold hover:underline bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-700">
+            Meja #08 <i class="fa-solid fa-pen text-[9px] ml-1"></i>
+          </button>
         </div>
         <h1 class="text-lg font-extrabold tracking-tight text-white mt-0.5">Savoria Bistro</h1>
       </div>
@@ -113,11 +112,19 @@
 
   <!-- ==================== SECTION: CUSTOMER VIEW ==================== -->
   <main id="customerSection" class="hidden max-w-md mx-auto px-4 pt-4">
-    <!-- Search Bar -->
-    <div class="relative mb-4">
-      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-      <input type="text" id="searchInput" oninput="renderMenu()" placeholder="Cari makanan atau minuman..."
-        class="w-full bg-slate-800/80 border border-slate-700/80 text-xs text-slate-100 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-amber-500">
+    <!-- Search & Sort Bar -->
+    <div class="flex gap-2 mb-4">
+      <div class="relative flex-1">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+        <input type="text" id="searchInput" oninput="renderMenu()" placeholder="Cari makanan atau minuman..."
+          class="w-full bg-slate-800/80 border border-slate-700/80 text-xs text-slate-100 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-amber-500">
+      </div>
+      <select id="sortSelect" onchange="renderMenu()" class="bg-slate-800 border border-slate-700 text-xs text-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500">
+        <option value="default">Urutkan</option>
+        <option value="cheap">Termurah</option>
+        <option value="expensive">Termahal</option>
+        <option value="rating">Rating Tertinggi</option>
+      </select>
     </div>
 
     <!-- Category Tabs -->
@@ -165,22 +172,75 @@
       <div id="cartList" class="p-4 overflow-y-auto flex-1 space-y-3"></div>
 
       <div class="p-4 border-t border-slate-800 bg-slate-900/90 space-y-3">
-        <div class="space-y-1 text-xs">
+        <!-- Payment Method Selection -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Metode Pembayaran</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer border border-amber-500 bg-amber-500/10 rounded-xl p-2 text-center text-xs font-bold text-amber-400 flex flex-col items-center gap-1">
+              <input type="radio" name="paymentMethod" value="QRIS" checked class="hidden" onchange="selectPayment(this)">
+              <i class="fa-solid fa-qrcode text-base"></i> QRIS
+            </label>
+            <label class="cursor-pointer border border-slate-700 bg-slate-800 rounded-xl p-2 text-center text-xs font-semibold text-slate-300 flex flex-col items-center gap-1">
+              <input type="radio" name="paymentMethod" value="E-Wallet" class="hidden" onchange="selectPayment(this)">
+              <i class="fa-solid fa-wallet text-base"></i> E-Wallet
+            </label>
+            <label class="cursor-pointer border border-slate-700 bg-slate-800 rounded-xl p-2 text-center text-xs font-semibold text-slate-300 flex flex-col items-center gap-1">
+              <input type="radio" name="paymentMethod" value="Tunai" class="hidden" onchange="selectPayment(this)">
+              <i class="fa-solid fa-money-bill-wave text-base"></i> Kasir / Tunai
+            </label>
+          </div>
+        </div>
+
+        <div class="space-y-1 text-xs pt-1">
           <div class="flex justify-between text-slate-400"><span>Subtotal</span><span id="modalSubtotal">Rp 0</span></div>
           <div class="flex justify-between text-slate-400"><span>Pajak & Layanan (10%)</span><span id="modalTax">Rp 0</span></div>
           <div class="flex justify-between text-slate-100 font-bold text-sm pt-2 border-t border-slate-800">
             <span>Total Bayar</span><span id="modalTotal" class="text-amber-400 font-extrabold">Rp 0</span>
           </div>
         </div>
-        <button onclick="submitOrder()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-2">
-          <i class="fa-solid fa-paper-plane"></i> Kirim Pesanan ke Dapur
+        <button onclick="processCheckout()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-2">
+          <i class="fa-solid fa-paper-plane"></i> Lanjut Pembayaran / Kirim
         </button>
       </div>
     </div>
   </div>
 
+  <!-- QRIS / E-Wallet Simulation Modal -->
+  <div id="qrisModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-xs rounded-2xl p-5 text-center space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h3 id="qrisTitle" class="font-bold text-slate-100 text-sm">Scan QRIS Pembayaran</h3>
+        <button onclick="closeQrisModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="bg-white p-3 rounded-2xl w-44 h-44 mx-auto flex items-center justify-center shadow-inner">
+        <!-- Mock QR Code using FontAwesome -->
+        <i class="fa-solid fa-qrcode text-8xl text-slate-900"></i>
+      </div>
+      <div>
+        <p class="text-xs text-slate-400">Total Tagihan:</p>
+        <p id="qrisAmount" class="text-base font-extrabold text-amber-400">Rp 0</p>
+        <p class="text-[10px] text-slate-500 mt-1">Gunakan GoPay, OVO, Dana, BCA, atau Mobile Banking untuk scan.</p>
+      </div>
+      <button onclick="confirmQrisPayment()" class="w-full bg-green-500 hover:bg-green-400 text-slate-950 font-extrabold py-2.5 rounded-xl text-xs">
+        <i class="fa-solid fa-check mr-1"></i> Selesaikan Pembayaran
+      </button>
+    </div>
+  </div>
+
   <!-- ==================== SECTION: ADMIN DASHBOARD ==================== -->
   <main id="adminSection" class="hidden max-w-md mx-auto px-4 pt-4">
+    <!-- Admin Stats Overview -->
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="bg-slate-800 p-3 rounded-2xl border border-slate-700">
+        <p class="text-[11px] text-slate-400">Total Pendapatan</p>
+        <h3 id="adminTotalRevenue" class="text-base font-extrabold text-amber-400 mt-0.5">Rp 0</h3>
+      </div>
+      <div class="bg-slate-800 p-3 rounded-2xl border border-slate-700">
+        <p class="text-[11px] text-slate-400">Pesanan Aktif</p>
+        <h3 id="adminActiveOrdersCount" class="text-base font-extrabold text-blue-400 mt-0.5">0</h3>
+      </div>
+    </div>
+
     <!-- Admin Nav Tabs -->
     <div class="grid grid-cols-2 gap-2 mb-4 bg-slate-800/80 p-1 rounded-2xl border border-slate-700">
       <button id="adminTabMenu" onclick="switchAdminTab('menu')" class="py-2 text-xs font-bold rounded-xl bg-amber-500 text-slate-950 transition-all">
@@ -206,8 +266,8 @@
     <!-- Admin View 2: View Orders -->
     <div id="adminOrdersView" class="hidden space-y-3">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm font-bold text-slate-200">Pesanan Masuk</h3>
-        <button onclick="clearOrdersHistory()" class="text-xs text-red-400 hover:underline">Clear History</button>
+        <h3 class="text-sm font-bold text-slate-200">Daftar Pesanan Meja</h3>
+        <button onclick="clearOrdersHistory()" class="text-xs text-red-400 hover:underline">Clear Selesai</button>
       </div>
       <div id="adminOrdersList" class="space-y-3"></div>
     </div>
@@ -259,7 +319,6 @@
 
   <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
-    // Data Default Awal
     const defaultMenu = [
       { id: 1, title: "Wagyu Meltique Steak", category: "makanan", price: 145000, description: "Daging wagyu 200g disajikan dengan saus mushroom dan potato wedges.", image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80", rating: 4.9 },
       { id: 2, title: "Truffle Carbonara Pasta", category: "makanan", price: 85000, description: "Fettuccine creamy beraroma truffle, keju parmesan, dan beef bacon.", image: "https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&w=600&q=80", rating: 4.8 },
@@ -267,14 +326,14 @@
       { id: 4, title: "Molten Lava Chocolate", category: "dessert", price: 45000, description: "Kue cokelat hangat dengan lelehan cokelat + 1 scoop es krim vanila.", image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=600&q=80", rating: 4.9 }
     ];
 
-    // Global State
     let menuData = JSON.parse(localStorage.getItem('savoria_menu')) || defaultMenu;
     let ordersData = JSON.parse(localStorage.getItem('savoria_orders')) || [];
     let currentUser = JSON.parse(localStorage.getItem('savoria_user')) || null;
+    let currentTable = localStorage.getItem('savoria_table') || 'Meja #08';
     let cart = {};
     let currentCategory = 'all';
+    let selectedPayment = 'QRIS';
 
-    // Inisialisasi saat aplikasi dibuka
     window.onload = function() {
       checkAuth();
     };
@@ -283,7 +342,16 @@
       return 'Rp ' + Number(num).toLocaleString('id-ID');
     }
 
-    // AUTHENTICATION LOGIC
+    function changeTableNumber() {
+      const newTbl = prompt("Masukkan nomor meja Anda (Contoh: Meja #05):", currentTable);
+      if (newTbl) {
+        currentTable = newTbl;
+        localStorage.setItem('savoria_table', currentTable);
+        document.getElementById('tableBtn').innerHTML = `${currentTable} <i class="fa-solid fa-pen text-[9px] ml-1"></i>`;
+      }
+    }
+
+    // AUTH
     function handleLogin(e) {
       e.preventDefault();
       const userVal = document.getElementById('loginUsername').value.trim();
@@ -294,7 +362,7 @@
       } else if (userVal === 'user' && passVal === 'user123') {
         currentUser = { username: 'Pelanggan', role: 'user' };
       } else {
-        alert('❌ Username atau Password salah!\n\nPetunjuk Demo:\n- Admin: admin / admin123\n- User: user / user123');
+        alert('❌ Username atau Password salah!\n\nDemo:\n- Admin: admin / admin123\n- User: user / user123');
         return;
       }
 
@@ -338,6 +406,7 @@
 
       loginSection.classList.add('hidden');
       mainHeader.classList.remove('hidden');
+      document.getElementById('tableBtn').innerHTML = `${currentTable} <i class="fa-solid fa-pen text-[9px] ml-1"></i>`;
 
       if (currentUser.role === 'admin') {
         roleBadge.innerText = '🛡️ ADMIN';
@@ -345,8 +414,7 @@
         customerSection.classList.add('hidden');
         adminSection.classList.remove('hidden');
         document.getElementById('floatingCart').classList.add('hidden');
-        renderAdminMenu();
-        renderAdminOrders();
+        renderAdminDashboard();
       } else {
         roleBadge.innerText = '👤 PELANGGAN';
         cartHeaderBtn.classList.remove('hidden');
@@ -357,16 +425,21 @@
       }
     }
 
-    // CUSTOMER MENU LOGIC
+    // CUSTOMER
     function renderMenu() {
       const grid = document.getElementById('menuGrid');
       const query = document.getElementById('searchInput').value.toLowerCase();
+      const sortVal = document.getElementById('sortSelect').value;
 
-      const filtered = menuData.filter(item => {
+      let filtered = menuData.filter(item => {
         const matchCat = currentCategory === 'all' || item.category === currentCategory;
         const matchSearch = item.title.toLowerCase().includes(query) || item.description.toLowerCase().includes(query);
         return matchCat && matchSearch;
       });
+
+      if (sortVal === 'cheap') filtered.sort((a,b) => a.price - b.price);
+      if (sortVal === 'expensive') filtered.sort((a,b) => b.price - a.price);
+      if (sortVal === 'rating') filtered.sort((a,b) => b.rating - a.rating);
 
       if (filtered.length === 0) {
         grid.innerHTML = `<p class="text-center text-xs text-slate-500 py-8">Menu tidak ditemukan.</p>`;
@@ -426,6 +499,18 @@
       else cart[id] = next;
       renderMenu();
       updateCartSummary();
+    }
+
+    function selectPayment(radio) {
+      selectedPayment = radio.value;
+      document.querySelectorAll('input[name="paymentMethod"]').forEach(el => {
+        const parent = el.parentElement;
+        if (el.checked) {
+          parent.className = "cursor-pointer border border-amber-500 bg-amber-500/10 rounded-xl p-2 text-center text-xs font-bold text-amber-400 flex flex-col items-center gap-1";
+        } else {
+          parent.className = "cursor-pointer border border-slate-700 bg-slate-800 rounded-xl p-2 text-center text-xs font-semibold text-slate-300 flex flex-col items-center gap-1";
+        }
+      });
     }
 
     function updateCartSummary() {
@@ -498,9 +583,35 @@
       document.getElementById('cartModal').classList.toggle('hidden');
     }
 
-    function submitOrder() {
+    function processCheckout() {
       if (Object.keys(cart).length === 0) return;
 
+      const subtotal = Object.keys(cart).reduce((sum, id) => {
+        const item = menuData.find(m => m.id === parseInt(id));
+        return sum + (item.price * cart[id]);
+      }, 0);
+      const grandTotal = subtotal + (subtotal * 0.1);
+
+      if (selectedPayment === 'QRIS' || selectedPayment === 'E-Wallet') {
+        document.getElementById('qrisTitle').innerText = `Scan ${selectedPayment} Pembayaran`;
+        document.getElementById('qrisAmount').innerText = formatRupiah(grandTotal);
+        toggleCartModal();
+        document.getElementById('qrisModal').classList.remove('hidden');
+      } else {
+        submitOrder('Tunai & Menunggu Kasir');
+      }
+    }
+
+    function closeQrisModal() {
+      document.getElementById('qrisModal').classList.add('hidden');
+    }
+
+    function confirmQrisPayment() {
+      closeQrisModal();
+      submitOrder(`Lunas (${selectedPayment})`);
+    }
+
+    function submitOrder(paymentStatusText) {
       const orderItems = Object.keys(cart).map(id => {
         const item = menuData.find(m => m.id === parseInt(id));
         return { title: item.title, qty: cart[id], price: item.price };
@@ -511,24 +622,27 @@
 
       const newOrder = {
         id: 'ORD-' + Date.now().toString().slice(-4),
-        table: 'Meja #08',
+        table: currentTable,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         items: orderItems,
         total: grandTotal,
+        payment: paymentStatusText,
         status: 'Diproses'
       };
 
       ordersData.unshift(newOrder);
       localStorage.setItem('savoria_orders', JSON.stringify(ordersData));
 
-      alert(`🎉 Pesanan (${newOrder.id}) Berhasil Terkirim ke Dapur!`);
+      alert(`🎉 Pesanan (${newOrder.id}) dari ${currentTable} Berhasil Terkirim!\nMetode: ${paymentStatusText}`);
       cart = {};
       updateCartSummary();
       renderMenu();
-      toggleCartModal();
+      if(!document.getElementById('cartModal').classList.contains('hidden')) {
+        toggleCartModal();
+      }
     }
 
-    // ADMIN DASHBOARD LOGIC
+    // ADMIN
     function switchAdminTab(tab) {
       const btnMenu = document.getElementById('adminTabMenu');
       const btnOrders = document.getElementById('adminTabOrders');
@@ -547,6 +661,20 @@
         menuView.classList.add('hidden');
         renderAdminOrders();
       }
+    }
+
+    function renderAdminDashboard() {
+      renderAdminMenu();
+      renderAdminOrders();
+      
+      const totalRev = ordersData
+        .filter(o => o.status === 'Selesai')
+        .reduce((sum, o) => sum + o.total, 0);
+      
+      const activeCount = ordersData.filter(o => o.status === 'Diproses').length;
+
+      document.getElementById('adminTotalRevenue').innerText = formatRupiah(totalRev);
+      document.getElementById('adminActiveOrdersCount').innerText = activeCount;
     }
 
     function renderAdminMenu() {
@@ -587,16 +715,16 @@
       localStorage.setItem('savoria_menu', JSON.stringify(menuData));
       
       toggleAddMenuModal();
-      renderAdminMenu();
+      renderAdminDashboard();
       e.target.reset();
       alert('✨ Menu baru berhasil ditambahkan!');
     }
 
     function deleteMenuItem(id) {
-      if (confirm('Apakah Anda yakin ingin menghapus menu ini?')) {
+      if (confirm('Hapus menu ini?')) {
         menuData = menuData.filter(item => item.id !== id);
         localStorage.setItem('savoria_menu', JSON.stringify(menuData));
-        renderAdminMenu();
+        renderAdminDashboard();
       }
     }
 
@@ -607,14 +735,14 @@
         return;
       }
 
-      container.innerHTML = ordersData.map(order => `
+      container.innerHTML = ordersData.map((order, idx) => `
         <div class="bg-slate-800 p-3.5 rounded-xl border border-slate-700 space-y-2 text-xs">
           <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
             <div>
               <span class="font-extrabold text-amber-400">${order.id}</span>
               <span class="text-slate-400 ml-2">(${order.table} - ${order.time})</span>
             </div>
-            <span class="px-2 py-0.5 text-[10px] rounded-full font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            <span class="px-2 py-0.5 text-[10px] rounded-full font-bold ${order.status === 'Selesai' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
               ${order.status}
             </span>
           </div>
@@ -626,22 +754,34 @@
               </div>
             `).join('')}
           </div>
-          <div class="pt-2 border-t border-slate-700/60 flex justify-between font-bold text-slate-100">
-            <span>Total Akhir</span>
-            <span class="text-amber-400">${formatRupiah(order.total)}</span>
+          <div class="pt-2 border-t border-slate-700/60 flex justify-between items-center font-bold text-slate-100">
+            <div>
+              <span class="text-[10px] block text-slate-400">Pembayaran: <span class="text-amber-300">${order.payment}</span></span>
+              <span>Total: <span class="text-amber-400">${formatRupiah(order.total)}</span></span>
+            </div>
+            ${order.status === 'Diproses' ? `
+              <button onclick="completeOrder(${idx})" class="bg-green-500 hover:bg-green-400 text-slate-950 px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold">
+                Selesaikan
+              </button>
+            ` : ''}
           </div>
         </div>
       `).join('');
     }
 
+    function completeOrder(idx) {
+      ordersData[idx].status = 'Selesai';
+      localStorage.setItem('savoria_orders', JSON.stringify(ordersData));
+      renderAdminDashboard();
+    }
+
     function clearOrdersHistory() {
-      if (confirm('Hapus semua histori pesanan masuk?')) {
-        ordersData = [];
-        localStorage.removeItem('savoria_orders');
-        renderAdminOrders();
+      if (confirm('Hapus histori pesanan yang sudah selesai?')) {
+        ordersData = ordersData.filter(o => o.status !== 'Selesai');
+        localStorage.setItem('savoria_orders', JSON.stringify(ordersData));
+        renderAdminDashboard();
       }
     }
   </script>
 </body>
 </html>
-
