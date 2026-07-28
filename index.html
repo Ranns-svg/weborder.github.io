@@ -129,10 +129,10 @@
 
     <!-- Category Tabs -->
     <div class="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-1">
-      <button onclick="setCategory('all')" class="cat-btn active bg-amber-500 text-slate-950 font-bold px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">✨ Semua</button>
-      <button onclick="setCategory('makanan')" class="cat-btn bg-slate-800 text-slate-300 font-medium px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap border border-slate-700/50">🍔 Makanan</button>
-      <button onclick="setCategory('minuman')" class="cat-btn bg-slate-800 text-slate-300 font-medium px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap border border-slate-700/50">🍹 Minuman</button>
-      <button onclick="setCategory('dessert')" class="cat-btn bg-slate-800 text-slate-300 font-medium px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap border border-slate-700/50">🍰 Dessert</button>
+      <button onclick="setCategory('all', this)" class="cat-btn active bg-amber-500 text-slate-950 font-bold px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap">✨ Semua</button>
+      <button onclick="setCategory('makanan', this)" class="cat-btn bg-slate-800 text-slate-300 font-medium px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap border border-slate-700/50">🍔 Makanan</button>
+      <button onclick="setCategory('minuman', this)" class="cat-btn bg-slate-800 text-slate-300 font-medium px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap border border-slate-700/50">🍹 Minuman</button>
+      <button onclick="setCategory('dessert', this)" class="cat-btn bg-slate-800 text-slate-300 font-medium px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap border border-slate-700/50">🍰 Dessert</button>
     </div>
 
     <!-- Menu Grid -->
@@ -213,7 +213,6 @@
         <button onclick="closeQrisModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="bg-white p-3 rounded-2xl w-44 h-44 mx-auto flex items-center justify-center shadow-inner">
-        <!-- Mock QR Code using FontAwesome -->
         <i class="fa-solid fa-qrcode text-8xl text-slate-900"></i>
       </div>
       <div>
@@ -300,10 +299,19 @@
             <input type="number" id="newPrice" required placeholder="45000" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white">
           </div>
         </div>
+
+        <!-- Support Both File Upload & Image URL -->
         <div>
-          <label class="block text-slate-300 font-semibold mb-1">URL Gambar (Foto)</label>
-          <input type="url" id="newImage" required placeholder="https://images.unsplash.com/..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white">
+          <label class="block text-slate-300 font-semibold mb-1">Foto Menu (Upload HP / Gallery)</label>
+          <input type="file" id="newImageFile" accept="image/*" onchange="previewImage(event)" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer mb-2">
+          <input type="hidden" id="newImageBase64">
+          <p class="text-[10px] text-slate-400 mb-1 text-center">-- Atau gunakan Link URL Gambar --</p>
+          <input type="url" id="newImageUrl" placeholder="https://images.unsplash.com/..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white">
+          <div id="imagePreviewContainer" class="hidden mt-2">
+            <img id="imagePreview" src="" class="w-full h-28 object-cover rounded-xl border border-slate-700">
+          </div>
         </div>
+
         <div>
           <label class="block text-slate-300 font-semibold mb-1">Deskripsi Singkat</label>
           <textarea id="newDescription" rows="2" required placeholder="Deskripsi rasa atau bahan utama..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"></textarea>
@@ -315,7 +323,6 @@
       </form>
     </div>
   </div>
-
 
   <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
@@ -337,6 +344,19 @@
     window.onload = function() {
       checkAuth();
     };
+
+    // Real-time Sync Event (Antar Tab/Jendela)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'savoria_menu') {
+        menuData = JSON.parse(e.newValue) || defaultMenu;
+        if (currentUser?.role === 'admin') renderAdminDashboard();
+        else renderMenu();
+      }
+      if (e.key === 'savoria_orders') {
+        ordersData = JSON.parse(e.newValue) || [];
+        if (currentUser?.role === 'admin') renderAdminDashboard();
+      }
+    });
 
     function formatRupiah(num) {
       return 'Rp ' + Number(num).toLocaleString('id-ID');
@@ -425,7 +445,7 @@
       }
     }
 
-    // CUSTOMER
+    // CUSTOMER VIEW
     function renderMenu() {
       const grid = document.getElementById('menuGrid');
       const query = document.getElementById('searchInput').value.toLowerCase();
@@ -481,14 +501,12 @@
       }).join('');
     }
 
-    function setCategory(cat) {
+    function setCategory(cat, btn) {
       currentCategory = cat;
-      document.querySelectorAll('.cat-btn').forEach(btn => {
-        btn.classList.remove('bg-amber-500', 'text-slate-950', 'font-bold');
-        btn.classList.add('bg-slate-800', 'text-slate-300');
+      document.querySelectorAll('.cat-btn').forEach(b => {
+        b.className = "cat-btn bg-slate-800 text-slate-300 font-medium px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap border border-slate-700/50";
       });
-      event.currentTarget.classList.remove('bg-slate-800', 'text-slate-300');
-      event.currentTarget.classList.add('bg-amber-500', 'text-slate-950', 'font-bold');
+      btn.className = "cat-btn active bg-amber-500 text-slate-950 font-bold px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap";
       renderMenu();
     }
 
@@ -588,7 +606,7 @@
 
       const subtotal = Object.keys(cart).reduce((sum, id) => {
         const item = menuData.find(m => m.id === parseInt(id));
-        return sum + (item.price * cart[id]);
+        return sum + (item ? item.price * cart[id] : 0);
       }, 0);
       const grandTotal = subtotal + (subtotal * 0.1);
 
@@ -642,7 +660,7 @@
       }
     }
 
-    // ADMIN
+    // ADMIN VIEW
     function switchAdminTab(tab) {
       const btnMenu = document.getElementById('adminTabMenu');
       const btnOrders = document.getElementById('adminTabOrders');
@@ -699,14 +717,33 @@
       document.getElementById('addMenuModal').classList.toggle('hidden');
     }
 
+    // Preview foto galeri saat di-upload
+    function previewImage(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('newImageBase64').value = evt.target.result;
+          document.getElementById('imagePreview').src = evt.target.result;
+          document.getElementById('imagePreviewContainer').classList.remove('hidden');
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
     function saveNewMenuItem(e) {
       e.preventDefault();
+      const base64Img = document.getElementById('newImageBase64').value;
+      const urlImg = document.getElementById('newImageUrl').value;
+      
+      const finalImage = base64Img || urlImg || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80";
+
       const newItem = {
         id: Date.now(),
         title: document.getElementById('newTitle').value,
         category: document.getElementById('newCategory').value,
         price: parseInt(document.getElementById('newPrice').value),
-        image: document.getElementById('newImage').value,
+        image: finalImage,
         description: document.getElementById('newDescription').value,
         rating: 5.0
       };
@@ -717,6 +754,8 @@
       toggleAddMenuModal();
       renderAdminDashboard();
       e.target.reset();
+      document.getElementById('newImageBase64').value = '';
+      document.getElementById('imagePreviewContainer').classList.add('hidden');
       alert('✨ Menu baru berhasil ditambahkan!');
     }
 
